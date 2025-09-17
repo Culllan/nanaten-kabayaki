@@ -123,29 +123,14 @@ function startGame() {
   setGameScale();
   isFirstFrame = false;
   gameRunning = true;
-  const soundEffects = [destroySe, endSe];
-  soundEffects.forEach(se => {
-    if (se) {
-      se.muted = true;  // 一時的にミュート
-      se.play().then(() => {
-        se.pause();
-        se.currentTime = 0;
-        se.muted = false; // 準備が終わったらミュートを解除
-      }).catch(() => {
-        se.muted = false; // エラーが起きてもミュートは解除しておく
-      });
-    }
-  });
-  const allAudio = [bgm, destroySe, endSe];
-  allAudio.forEach(audio => {
-    if (audio) {
-      audio.play().then(() => {
-        audio.pause();
-      }).catch(() => {});
-    }
-  });
+
+  // BGMの再生だけに集中させる
   bgm.currentTime = 0;
-  bgm.play().catch(e => console.log("BGMの再生に失敗:", e));
+  bgm.play().catch(e => {
+    // もしエラーが出たらコンソールに表示
+    console.log("BGMの再生に失敗しました:", e);
+  });
+
   tapInstruction.style.display = 'block';
   setTimeout(() => { tapInstruction.style.display = 'none'; }, 2000);
   gameLoop();
