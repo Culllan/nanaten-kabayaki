@@ -373,3 +373,4 @@ window.addEventListener('resize', () => {
 
 // 初期セット
 setGameScale();
+
