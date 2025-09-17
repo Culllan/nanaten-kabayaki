@@ -123,6 +123,14 @@ function startGame() {
   setGameScale();
   isFirstFrame = false;
   gameRunning = true;
+  const allAudio = [bgm, destroySe, endSe];
+  allAudio.forEach(audio => {
+    if (audio) {
+      audio.play().then(() => {
+        audio.pause();
+      }).catch(() => {});
+    }
+  });
   bgm.currentTime = 0;
   bgm.play().catch(e => console.log("BGMの再生に失敗:", e));
   tapInstruction.style.display = 'block';
