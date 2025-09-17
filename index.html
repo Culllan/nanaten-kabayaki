@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>弾幕シューティングゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>弾幕シューティング</h1>
+
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <div id="home-screen" class="screen">
+            <h2>- MENU -</h2>
+            <button id="start-button">開始する</button>
+            <button id="highscore-button">ここまでの最高得点</button>
+        </div>
+
+        <div id="clear-screen" class="screen" style="display: none;">
+            <h2>CLEAR!</h2>
+            <p>SCORE: <span class="final-score">0</span></p>
+            <button class="restart-button">もう一度プレイ</button>
+        </div>
+        
+        <div id="failure-screen" class="screen" style="display: none;">
+            <h2>もう一度！</h2>
+            <p>SCORE: <span class="final-score">0</span></p>
+            <button class="restart-button">もう一度プレイ</button>
+        </div>
+
+    </div>
+
+    <audio id="bgm" src="mp3/bgm.mp3" loop></audio>
+    <audio id="destroy-se" src="mp3/na.mp3"></audio>
+    <audio id="end-se" src="mp3/end.mp3"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

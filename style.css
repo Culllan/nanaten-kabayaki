@@ -1,0 +1,70 @@
+body {
+    background-color: #111;
+    color: #eee;
+    font-family: 'Meiryo', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+h1 {
+    color: #0f0;
+    text-shadow: 0 0 5px #0f0;
+}
+
+#game-container {
+    position: relative;
+    width: 600px; /* ゲーム画面の幅 */
+    height: 800px; /* ゲーム画面の高さ */
+}
+
+#game-canvas {
+    background-color: #000;
+    border: 2px solid #0f0;
+    cursor: none; /* ゲーム中はカーソルを消す */
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.screen h2 {
+    font-size: 3rem;
+    color: #f00;
+    text-shadow: 0 0 8px #f00;
+    margin-bottom: 40px;
+}
+
+button {
+    font-size: 1.5rem;
+    padding: 15px 30px;
+    margin: 10px;
+    background-color: #333;
+    color: #0f0;
+    border: 2px solid #0f0;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+button:hover {
+    background-color: #0f0;
+    color: #000;
+}
+/* style.css の末尾に追加 */
+#clear-screen h2 {
+    color: #0ff; /* クリアの文字色を水色に */
+    text-shadow: 0 0 8px #0ff;
+}
