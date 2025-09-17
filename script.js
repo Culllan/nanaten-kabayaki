@@ -26,18 +26,25 @@ let gameTimer = 0;
 const gameDuration = 30 * 60;
 
 // ========
-// プレイヤー (サイズや位置は動的に設定)
+// プレイヤー
 // ========
 const player = { x: 0, y: 0, width: 0, height: 0, bullets: [], shootInterval: 10, shootTimer: 0 };
 
 // ========
-// 敵・ボス (動的に設定)
+// 敵・ボス
 // ========
 let enemies = [];
 let enemySpawnInterval = 20;
 let enemySpawnTimer = 0;
 let boss = null;
 let bossAppearanceScore = 300;
+
+// ========
+// 【新規】スライド操作用の変数
+// ========
+let isDragging = false;
+let touchStartX = 0;
+let playerStartX = 0;
 
 
 // ==================
@@ -51,49 +58,62 @@ restartButtons.forEach(button => button.addEventListener('click', () => {
     startGame();
 }));
 
-// 【変更】マウスとタッチ操作を共通化する関数
-function updatePlayerPosition(clientX) {
-    const rect = canvas.getBoundingClientRect();
-    player.x = clientX - rect.left;
-}
-
-// マウス操作
+// 【PC用】マウス操作 (絶対位置)
 canvas.addEventListener('mousemove', (e) => {
-    if (!gameRunning) return;
-    updatePlayerPosition(e.clientX);
+    if (!gameRunning || isDragging) return; // スマホ操作中はマウスを無効化
+    const rect = canvas.getBoundingClientRect();
+    player.x = e.clientX - rect.left;
 });
 
-// 【新規】タッチ操作
+// 【スマホ用】タッチ開始 (スライドの起点)
 canvas.addEventListener('touchstart', (e) => {
     if (!gameRunning) return;
-    e.preventDefault(); // 画面のスクロールを防止
-    updatePlayerPosition(e.touches[0].clientX);
+    e.preventDefault();
+    isDragging = true;
+    touchStartX = e.touches[0].clientX;
+    playerStartX = player.x;
 }, { passive: false });
 
+// 【スマホ用】スライド中 (相対位置)
 canvas.addEventListener('touchmove', (e) => {
-    if (!gameRunning) return;
+    if (!gameRunning || !isDragging) return;
     e.preventDefault();
-    updatePlayerPosition(e.touches[0].clientX);
+    const touchCurrentX = e.touches[0].clientX;
+    const deltaX = touchCurrentX - touchStartX; // 指の移動量
+    player.x = playerStartX + deltaX; // プレイヤーの初期位置から移動量を加算
+
+    // 画面外にはみ出さないように制御
+    if (player.x < player.width / 2) {
+        player.x = player.width / 2;
+    }
+    if (player.x > canvas.width - player.width / 2) {
+        player.x = canvas.width - player.width / 2;
+    }
 }, { passive: false });
+
+// 【スマホ用】タッチ終了
+canvas.addEventListener('touchend', (e) => {
+    isDragging = false;
+});
+canvas.addEventListener('touchcancel', (e) => {
+    isDragging = false;
+});
 
 
 // ==================
 // ゲームのコア関数
 // ==================
 
-// 【変更】画面サイズに合わせてオブジェクトの大きさを設定する
 function setGameScale() {
-    // CSSで描画サイズが決まった後、canvasの解像度をそれに合わせる
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
-    // プレイヤーのサイズと初期位置
-    player.width = canvas.width * 0.08;
-    player.height = canvas.width * 0.08;
+    // 【サイズ調整】プレイヤーのサイズを小さくする
+    player.width = canvas.width * 0.06;
+    player.height = canvas.width * 0.06;
     player.x = canvas.width / 2;
     player.y = canvas.height - player.height * 1.5;
     
-    // スコアなどのフォントサイズ
     ctx.font = `${canvas.width * 0.05}px sans-serif`;
 }
 
@@ -109,7 +129,7 @@ function resetGame() {
 
 function startGame() {
     homeScreen.style.display = 'none';
-    setGameScale(); // ゲーム開始時にサイズを設定
+    setGameScale();
     resetGame();
     gameRunning = true;
     bgm.currentTime = 0;
@@ -143,7 +163,7 @@ function playDestroySE() {
 
 
 // ==================
-// 描画関連の関数
+// 描画関連の関数 (変更なし)
 // ==================
 function drawPlayer() {
     ctx.fillStyle = '#0ff';
@@ -168,7 +188,6 @@ function drawEnemies() {
 function drawBoss() {
     if (boss) {
         ctx.drawImage(bossImage, boss.x - boss.width / 2, boss.y - boss.height / 2, boss.width, boss.height);
-        // HPバー
         const barY = boss.y - boss.height / 2 - canvas.height * 0.02;
         ctx.fillStyle = 'red';
         ctx.fillRect(boss.x - boss.width / 2, barY, boss.width, canvas.height * 0.015);
@@ -195,26 +214,18 @@ function updatePlayer() {
         player.bullets.push({
             x: player.x,
             y: player.y - player.height / 2,
-            width: canvas.width * 0.015,
-            height: canvas.height * 0.02,
+            width: canvas.width * 0.012, // サイズ調整
+            height: canvas.height * 0.018, // サイズ調整
             speed: canvas.height * 0.015
         });
     }
-}
-function updateBullets() {
-    player.bullets.forEach((bullet, index) => {
-        bullet.y -= bullet.speed;
-        if (bullet.y < 0) {
-            player.bullets.splice(index, 1);
-        }
-    });
 }
 function updateEnemies() {
     if (!boss && score < bossAppearanceScore) {
         enemySpawnTimer++;
         if (enemySpawnTimer >= enemySpawnInterval) {
             enemySpawnTimer = 0;
-            const size = canvas.width * 0.12;
+            const size = canvas.width * 0.1; // 【サイズ調整】敵を小さくする
             enemies.push({
                 x: Math.random() * canvas.width,
                 y: -size,
@@ -234,7 +245,7 @@ function updateEnemies() {
 function updateBoss() {
     if (score >= bossAppearanceScore && !boss) {
         enemies = [];
-        const size = canvas.width * 0.3;
+        const size = canvas.width * 0.25; // 【サイズ調整】ボスを小さくする
         boss = {
             x: canvas.width / 2, y: canvas.height * 0.2, width: size, height: size,
             speed: canvas.width * 0.003, direction: 1, maxHp: 80, hp: 80,
@@ -249,14 +260,12 @@ function updateBoss() {
 }
 
 // ==================
-// 当たり判定
+// 当たり判定 (変更なし)
 // ==================
 function checkCollisions() {
     for (let i = player.bullets.length - 1; i >= 0; i--) {
         const bullet = player.bullets[i];
         if (!bullet) continue;
-        
-        // vs 敵
         for (let j = enemies.length - 1; j >= 0; j--) {
             const enemy = enemies[j];
             if (bullet.x < enemy.x + enemy.width / 2 && bullet.x + bullet.width > enemy.x - enemy.width / 2 &&
@@ -268,9 +277,7 @@ function checkCollisions() {
                 break; 
             }
         }
-        
-        // vs ボス
-        if (boss && player.bullets[i]) { // 弾がまだ存在するか確認
+        if (boss && player.bullets[i]) {
             if (bullet.x < boss.x + boss.width / 2 && bullet.x + bullet.width > boss.x - boss.width / 2 &&
                 bullet.y < boss.y + boss.height / 2 && bullet.y + bullet.height > boss.y - boss.height / 2) {
                 player.bullets.splice(i, 1);
@@ -289,7 +296,7 @@ function checkCollisions() {
 }
 
 // ==================
-// メインゲームループ
+// メインゲームループ (変更なし)
 // ==================
 function gameLoop() {
     if (!gameRunning) return;
@@ -298,25 +305,19 @@ function gameLoop() {
         endGame(false);
         return;
     }
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     updatePlayer();
     updateBullets();
     updateEnemies();
     updateBoss();
     checkCollisions();
-
     drawPlayer();
     drawBullets();
     drawEnemies();
     drawBoss();
     drawUI();
-
     animationFrameId = requestAnimationFrame(gameLoop);
 }
-
-// 画面サイズが変わった時にリサイズする処理
 window.addEventListener('resize', () => {
     if (gameRunning) {
         setGameScale();
