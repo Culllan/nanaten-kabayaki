@@ -41,7 +41,6 @@ let bossAppearanceScore = 150;
 // images
 const enemyImage = new Image();
 const bossImage = new Image();
-// もし画像があればパスを指定。無ければ単色で描画するロジックがあるので必須ではない
 enemyImage.src = 'image/ka.png';
 bossImage.src = 'image/u.png';
 let enemyImageLoaded = false;
@@ -66,33 +65,46 @@ function updatePlayerPosition(clientX) {
   player.x = newX;
 }
 
+// PC: マウス操作
 canvas.addEventListener('mousemove', (e) => {
   if (!gameRunning) return;
   updatePlayerPosition(e.clientX);
 });
 
+// スマホ: スライド操作対応
+let lastTouchX = null;
 canvas.addEventListener('touchstart', (e) => {
   if (!gameRunning) return;
   e.preventDefault();
-  updatePlayerPosition(e.touches[0].clientX);
+  lastTouchX = e.touches[0].clientX;
 }, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
   if (!gameRunning) return;
   e.preventDefault();
-  updatePlayerPosition(e.touches[0].clientX);
+  const currentX = e.touches[0].clientX;
+  if (lastTouchX !== null) {
+    const dx = currentX - lastTouchX;
+    player.x += dx;
+    if (player.x < player.width / 2) player.x = player.width / 2;
+    if (player.x > canvas.width - player.width / 2) player.x = canvas.width - player.width / 2;
+  }
+  lastTouchX = currentX;
 }, { passive: false });
+
+canvas.addEventListener('touchend', () => {
+  lastTouchX = null;
+});
 
 // game core
 function setGameScale() {
-  // キャンバスを表示サイズに合わせる
   canvas.width = canvas.clientWidth;
   canvas.height = canvas.clientHeight;
   player.width = canvas.width * 0.08;
   player.height = canvas.width * 0.08;
   player.x = canvas.width / 2;
   player.y = canvas.height - player.height * 1.5;
-  ctx.font = `${canvas.width * 0.05}px sans-serif`;
+  ctx.font = `${canvas.width * 0.06}px sans-serif`;
 }
 
 function resetGame() {
@@ -108,7 +120,6 @@ function resetGame() {
 function startGame() {
   homeScreen.style.display = 'none';
   resetGame();
-  // 最初にスケールを合わせておく（画面サイズを反映）
   setGameScale();
   isFirstFrame = false;
   gameRunning = true;
@@ -137,13 +148,9 @@ function endGame(isCleared) {
 }
 
 function playDestroySE() {
-  // 再利用可能な audio 要素を再生（素早い連射に対応）
   if (destroySe) {
     destroySe.currentTime = 0;
     destroySe.play().catch(() => {});
-  } else {
-    // フォールバック
-    new Audio('mp3/na.mp3').play().catch(() => {});
   }
 }
 
@@ -194,9 +201,11 @@ function drawBoss() {
 function drawUI() {
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'left';
-  ctx.fillText(`SCORE: ${score}`, canvas.width * 0.03, canvas.height * 0.05);
+  ctx.font = `${canvas.width * 0.06}px sans-serif`;
+  ctx.fillText(`SCORE: ${score}`, canvas.width * 0.03, canvas.height * 0.06);
+
   ctx.textAlign = 'right';
-  ctx.fillText(`TIME: ${(gameTimer / 60).toFixed(2)}`, canvas.width * 0.97, canvas.height * 0.05);
+  ctx.fillText(`TIME: ${(gameTimer / 60).toFixed(1)}`, canvas.width * 0.97, canvas.height * 0.06);
 }
 
 // updates
@@ -218,7 +227,6 @@ function updateBullets() {
   for (let i = player.bullets.length - 1; i >= 0; i--) {
     const b = player.bullets[i];
     b.y -= b.speed;
-    // 画面外なら削除
     if (b.y + b.height < 0) {
       player.bullets.splice(i, 1);
     }
@@ -273,7 +281,6 @@ function rectsOverlap(a, b) {
 }
 
 function checkCollisions() {
-  // 弾と敵
   for (let i = player.bullets.length - 1; i >= 0; i--) {
     const bullet = player.bullets[i];
     const bRect = {
@@ -292,7 +299,6 @@ function checkCollisions() {
         bottom: enemy.y + enemy.height / 2
       };
       if (rectsOverlap(bRect, eRect)) {
-        // ヒット
         player.bullets.splice(i, 1);
         enemies.splice(j, 1);
         score += 10;
@@ -302,7 +308,6 @@ function checkCollisions() {
       }
     }
     if (removed) continue;
-    // 弾とボス
     if (boss) {
       const bossRect = {
         left: boss.x - boss.width / 2,
@@ -332,19 +337,15 @@ function checkCollisions() {
 // game loop
 function gameLoop() {
   if (!gameRunning) return;
-
-  // リサイズや初回フレームのために必要ならスケールを再計算
   if (isFirstFrame) {
     setGameScale();
     isFirstFrame = false;
   }
-
   gameTimer--;
   if (gameTimer <= 0) {
     endGame(false);
     return;
   }
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   updatePlayer();
   updateBullets();
@@ -356,21 +357,16 @@ function gameLoop() {
   drawEnemies();
   drawBoss();
   drawUI();
-
   animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 // resize
 window.addEventListener('resize', () => {
   if (gameRunning) {
-    // 次のフレームで setGameScale を呼ぶようにして対応
     isFirstFrame = true;
   } else {
-    // ゲーム中でなければ即座に合わせる
     setGameScale();
   }
 });
 
-// 初期セット
 setGameScale();
-
