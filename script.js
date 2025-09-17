@@ -123,6 +123,19 @@ function startGame() {
   setGameScale();
   isFirstFrame = false;
   gameRunning = true;
+  const soundEffects = [destroySe, endSe];
+  soundEffects.forEach(se => {
+    if (se) {
+      se.muted = true;  // 一時的にミュート
+      se.play().then(() => {
+        se.pause();
+        se.currentTime = 0;
+        se.muted = false; // 準備が終わったらミュートを解除
+      }).catch(() => {
+        se.muted = false; // エラーが起きてもミュートは解除しておく
+      });
+    }
+  });
   const allAudio = [bgm, destroySe, endSe];
   allAudio.forEach(audio => {
     if (audio) {
