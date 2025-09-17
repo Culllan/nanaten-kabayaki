@@ -1,109 +1,90 @@
-/* 基本設定 */
 body {
-    background-color: #111;
-    color: #eee;
-    font-family: 'Meiryo', sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    padding: 2vmin 0; /* 上下に少し余白を追加 */
-    box-sizing: border-box;
-    touch-action: manipulation;
-    overflow: hidden;
+  background-color: #111;
+  color: #eee;
+  font-family: 'Meiryo', sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  padding: 2vmin 0;
+  box-sizing: border-box;
+  touch-action: manipulation;
+  overflow: hidden;
 }
 
 h1 {
-    color: #0f0;
-    text-shadow: 0 0 5px #0f0;
-    font-size: 5vmin;
-    margin: 0 0 2vmin 0; /* h1の下に余白 */
-    flex-shrink: 0; /* h1が縮まないように */
+  color: #0f0;
+  text-shadow: 0 0 5px #0f0;
+  font-size: 5vmin;
+  margin: 0 0 2vmin 0;
+  flex-shrink: 0;
 }
 
-/* ↓↓↓ レイアウト崩れを修正 ↓↓↓ */
 #game-container {
-    position: relative;
-    width: 95%; /* 横幅を画面の95%に */
-    max-width: 500px; /* PCでの最大幅を少し小さく */
-    aspect-ratio: 3 / 4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
+  position: relative;
+  width: 95%;
+  max-width: 500px;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 #game-canvas {
-    background-color: #000;
-    border: 2px solid #0f0;
-    width: 100%;
-    height: 100%;
-    cursor: none;
-    box-sizing: border-box;
+  background-color: #000;
+  border: 2px solid #0f0;
+  width: 100%;
+  height: 100%;
+  cursor: none;
+  box-sizing: border-box;
 }
-/* ↑↑↑ ここまで修正 ↑↑↑ */
 
 .screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    color: white;
-    z-index: 10;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.8);
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  text-align: center;
+  color: white;
+  z-index: 10;
 }
 
-.screen h2 {
-    font-size: 10vmin;
-    margin-bottom: 20px;
-}
-.screen p {
-    font-size: 5vmin;
-}
+.screen h2 { font-size: 10vmin; margin-bottom: 20px; }
+.screen p { font-size: 5vmin; }
 
 button {
-    font-size: 4vmin;
-    padding: 15px 30px;
-    margin: 10px;
-    background-color: #333;
-    color: #0f0;
-    border: 2px solid #0f0;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
+  font-size: 4vmin;
+  padding: 15px 30px;
+  margin: 10px;
+  background-color: #333;
+  color: #0f0;
+  border: 2px solid #0f0;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 button:hover {
-    background-color: #0f0;
-    color: #000;
+  background-color: #0f0;
+  color: #000;
 }
 
-#clear-screen h2 {
-    color: #0ff;
-    text-shadow: 0 0 8px #0ff;
-}
-#failure-screen h2 {
-    color: #f00;
-    text-shadow: 0 0 8px #f00;
-}
+#clear-screen h2 { color: #0ff; text-shadow: 0 0 8px #0ff; }
+#failure-screen h2 { color: #f00; text-shadow: 0 0 8px #f00; }
 
 #tap-instruction {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #fff;
-    font-size: 6vmin;
-    background-color: rgba(0, 0, 0, 0.7);
-    padding: 20px;
-    border-radius: 10px;
-    z-index: 15;
-    display: none;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  color: #fff;
+  font-size: 6vmin;
+  background-color: rgba(0,0,0,0.7);
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 15;
+  display: none;
 }
