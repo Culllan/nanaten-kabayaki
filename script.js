@@ -4,116 +4,121 @@
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const homeScreen = document.getElementById('home-screen');
-const clearScreen = document.getElementById('clear-screen');   // 【新規】
-const failureScreen = document.getElementById('failure-screen'); // 【変更】
+const clearScreen = document.getElementById('clear-screen');
+const failureScreen = document.getElementById('failure-screen');
 const startButton = document.getElementById('start-button');
 const highscoreButton = document.getElementById('highscore-button');
-const restartButtons = document.querySelectorAll('.restart-button'); // 【変更】
-const finalScoreEls = document.querySelectorAll('.final-score');   // 【変更】
+const restartButtons = document.querySelectorAll('.restart-button');
+const finalScoreEls = document.querySelectorAll('.final-score');
 
 // オーディオ要素
 const bgm = document.getElementById('bgm');
 const endSe = document.getElementById('end-se');
 
 // ==============
-// 画像の読み込み
-// ==============
-const enemyImage = new Image();
-enemyImage.src = 'image/ka.png';
-const bossImage = new Image();
-bossImage.src = 'image/u.png';
-
-// ==============
 // ゲーム設定
 // ==============
-canvas.width = 600;
-canvas.height = 800;
 let score = 0;
 let highScore = localStorage.getItem('danmakuHighScore') || 0;
 let gameRunning = false;
 let animationFrameId;
-
 let gameTimer = 0;
-const gameDuration = 30 * 60; // 30秒
+const gameDuration = 30 * 60;
 
 // ========
-// プレイヤー
+// プレイヤー (サイズや位置は動的に設定)
 // ========
-const player = {
-    x: canvas.width / 2,
-    y: canvas.height - 80,
-    width: 30,
-    height: 30,
-    bullets: [],
-    shootInterval: 10,
-    shootTimer: 0
-};
+const player = { x: 0, y: 0, width: 0, height: 0, bullets: [], shootInterval: 10, shootTimer: 0 };
 
 // ========
-// 敵キャラクター
+// 敵・ボス (動的に設定)
 // ========
 let enemies = [];
 let enemySpawnInterval = 20;
 let enemySpawnTimer = 0;
-
-// ========
-// ボスキャラクター
-// ========
 let boss = null;
-const bossAppearanceScore = 300;
+let bossAppearanceScore = 300;
+
 
 // ==================
 // イベントリスナー設定
 // ==================
-startButton.addEventListener('click', () => {
-    homeScreen.style.display = 'none';
+startButton.addEventListener('click', startGame);
+highscoreButton.addEventListener('click', () => alert(`最高得点: ${highScore}`));
+restartButtons.forEach(button => button.addEventListener('click', () => {
+    clearScreen.style.display = 'none';
+    failureScreen.style.display = 'none';
     startGame();
-});
+}));
 
-highscoreButton.addEventListener('click', () => {
-    alert(`最高得点: ${highScore}`);
-});
-
-// 【変更】両方のリスタートボタンにイベントを設定
-restartButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        clearScreen.style.display = 'none';
-        failureScreen.style.display = 'none';
-        startGame();
-    });
-});
-
-canvas.addEventListener('mousemove', (e) => {
+// 【変更】マウスとタッチ操作を共通化する関数
+function updatePlayerPosition(clientX) {
     const rect = canvas.getBoundingClientRect();
-    player.x = e.clientX - rect.left;
+    player.x = clientX - rect.left;
+}
+
+// マウス操作
+canvas.addEventListener('mousemove', (e) => {
+    if (!gameRunning) return;
+    updatePlayerPosition(e.clientX);
 });
+
+// 【新規】タッチ操作
+canvas.addEventListener('touchstart', (e) => {
+    if (!gameRunning) return;
+    e.preventDefault(); // 画面のスクロールを防止
+    updatePlayerPosition(e.touches[0].clientX);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    if (!gameRunning) return;
+    e.preventDefault();
+    updatePlayerPosition(e.touches[0].clientX);
+}, { passive: false });
 
 
 // ==================
 // ゲームのコア関数
 // ==================
+
+// 【変更】画面サイズに合わせてオブジェクトの大きさを設定する
+function setGameScale() {
+    // CSSで描画サイズが決まった後、canvasの解像度をそれに合わせる
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+
+    // プレイヤーのサイズと初期位置
+    player.width = canvas.width * 0.08;
+    player.height = canvas.width * 0.08;
+    player.x = canvas.width / 2;
+    player.y = canvas.height - player.height * 1.5;
+    
+    // スコアなどのフォントサイズ
+    ctx.font = `${canvas.width * 0.05}px sans-serif`;
+}
+
 function resetGame() {
     score = 0;
-    player.x = canvas.width / 2;
-    player.bullets = [];
     enemies = [];
     boss = null;
+    player.bullets = [];
     enemySpawnTimer = 0;
     player.shootTimer = 0;
     gameTimer = gameDuration;
 }
 
 function startGame() {
+    homeScreen.style.display = 'none';
+    setGameScale(); // ゲーム開始時にサイズを設定
     resetGame();
     gameRunning = true;
     bgm.currentTime = 0;
-    bgm.play();
+    bgm.play().catch(e => console.log("BGMの再生に失敗:", e));
     gameLoop();
 }
 
-// 【変更】ゲーム終了処理をクリア/失敗で分岐
 function endGame(isCleared) {
-    if (!gameRunning) return; // 二重呼び出し防止
+    if (!gameRunning) return;
     gameRunning = false;
     bgm.pause();
     cancelAnimationFrame(animationFrameId);
@@ -123,9 +128,7 @@ function endGame(isCleared) {
         localStorage.setItem('danmakuHighScore', highScore);
     }
     
-    // スコアを両方の画面に設定
     finalScoreEls.forEach(el => el.textContent = score);
-
     if (isCleared) {
         clearScreen.style.display = 'flex';
     } else {
@@ -140,7 +143,7 @@ function playDestroySE() {
 
 
 // ==================
-// 描画関連の関数 (変更なし)
+// 描画関連の関数
 // ==================
 function drawPlayer() {
     ctx.fillStyle = '#0ff';
@@ -165,15 +168,16 @@ function drawEnemies() {
 function drawBoss() {
     if (boss) {
         ctx.drawImage(bossImage, boss.x - boss.width / 2, boss.y - boss.height / 2, boss.width, boss.height);
+        // HPバー
+        const barY = boss.y - boss.height / 2 - canvas.height * 0.02;
         ctx.fillStyle = 'red';
-        ctx.fillRect(boss.x - boss.width / 2, boss.y - boss.height / 2 - 20, boss.width, 10);
+        ctx.fillRect(boss.x - boss.width / 2, barY, boss.width, canvas.height * 0.015);
         ctx.fillStyle = 'green';
-        ctx.fillRect(boss.x - boss.width / 2, boss.y - boss.height / 2 - 20, boss.width * (boss.hp / boss.maxHp), 10);
+        ctx.fillRect(boss.x - boss.width / 2, barY, boss.width * (boss.hp / boss.maxHp), canvas.height * 0.015);
     }
 }
 function drawUI() {
     ctx.fillStyle = '#fff';
-    ctx.font = '24px sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(`SCORE: ${score}`, 20, 40);
     ctx.textAlign = 'right';
@@ -182,13 +186,19 @@ function drawUI() {
 
 
 // ==================
-// 更新処理の関数 (変更なし)
+// 更新処理の関数
 // ==================
 function updatePlayer() {
     player.shootTimer++;
     if (player.shootTimer >= player.shootInterval) {
         player.shootTimer = 0;
-        player.bullets.push({x: player.x, y: player.y - player.height / 2, width: 5, height: 15, speed: 10});
+        player.bullets.push({
+            x: player.x,
+            y: player.y - player.height / 2,
+            width: canvas.width * 0.015,
+            height: canvas.height * 0.02,
+            speed: canvas.height * 0.015
+        });
     }
 }
 function updateBullets() {
@@ -204,7 +214,14 @@ function updateEnemies() {
         enemySpawnTimer++;
         if (enemySpawnTimer >= enemySpawnInterval) {
             enemySpawnTimer = 0;
-            enemies.push({x: Math.random() * canvas.width, y: -30, width: 50, height: 50, speed: 3 + Math.random() * 3});
+            const size = canvas.width * 0.12;
+            enemies.push({
+                x: Math.random() * canvas.width,
+                y: -size,
+                width: size,
+                height: size,
+                speed: canvas.height * 0.005 + Math.random() * (canvas.height * 0.003)
+            });
         }
     }
     enemies.forEach((enemy, index) => {
@@ -217,9 +234,10 @@ function updateEnemies() {
 function updateBoss() {
     if (score >= bossAppearanceScore && !boss) {
         enemies = [];
+        const size = canvas.width * 0.3;
         boss = {
-            x: canvas.width / 2, y: 150, width: 120, height: 120,
-            speed: 2, direction: 1, maxHp: 80, hp: 80,
+            x: canvas.width / 2, y: canvas.height * 0.2, width: size, height: size,
+            speed: canvas.width * 0.003, direction: 1, maxHp: 80, hp: 80,
         };
     }
     if (boss) {
@@ -234,28 +252,25 @@ function updateBoss() {
 // 当たり判定
 // ==================
 function checkCollisions() {
-    // プレイヤーの弾 vs 敵
     for (let i = player.bullets.length - 1; i >= 0; i--) {
+        const bullet = player.bullets[i];
+        if (!bullet) continue;
+        
+        // vs 敵
         for (let j = enemies.length - 1; j >= 0; j--) {
-            const bullet = player.bullets[i];
             const enemy = enemies[j];
-            if (!bullet || !enemy) continue; // 安全策
             if (bullet.x < enemy.x + enemy.width / 2 && bullet.x + bullet.width > enemy.x - enemy.width / 2 &&
                 bullet.y < enemy.y + enemy.height / 2 && bullet.y + bullet.height > enemy.y - enemy.height / 2) {
                 player.bullets.splice(i, 1);
                 enemies.splice(j, 1);
                 score += 10;
                 playDestroySE();
-                break;
+                break; 
             }
         }
-    }
-
-    // プレイヤーの弾 vs ボス
-    if (boss) {
-        for (let i = player.bullets.length - 1; i >= 0; i--) {
-            const bullet = player.bullets[i];
-            if (!bullet) continue;
+        
+        // vs ボス
+        if (boss && player.bullets[i]) { // 弾がまだ存在するか確認
             if (bullet.x < boss.x + boss.width / 2 && bullet.x + bullet.width > boss.x - boss.width / 2 &&
                 bullet.y < boss.y + boss.height / 2 && bullet.y + bullet.height > boss.y - boss.height / 2) {
                 player.bullets.splice(i, 1);
@@ -264,11 +279,10 @@ function checkCollisions() {
                 if (boss.hp <= 0) {
                     score += 500;
                     endSe.play();
-                    boss = null; // ボスを消す
-                    endGame(true); // 【変更】クリアとしてゲーム終了
-                    return; // 処理を抜ける
+                    boss = null;
+                    endGame(true);
+                    return;
                 }
-                break;
             }
         }
     }
@@ -279,11 +293,9 @@ function checkCollisions() {
 // ==================
 function gameLoop() {
     if (!gameRunning) return;
-
-    // タイマー更新
     gameTimer--;
     if (gameTimer <= 0) {
-        endGame(false); // 【変更】時間切れは失敗としてゲーム終了
+        endGame(false);
         return;
     }
 
@@ -303,3 +315,10 @@ function gameLoop() {
 
     animationFrameId = requestAnimationFrame(gameLoop);
 }
+
+// 画面サイズが変わった時にリサイズする処理
+window.addEventListener('resize', () => {
+    if (gameRunning) {
+        setGameScale();
+    }
+});

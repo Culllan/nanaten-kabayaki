@@ -1,3 +1,4 @@
+/* 基本設定 */
 body {
     background-color: #111;
     color: #eee;
@@ -8,24 +9,36 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
+    /* iOSでダブルタップによるズームを防止 */
+    touch-action: manipulation;
+    overflow: hidden; /* スクロールバーを消す */
 }
 
 h1 {
     color: #0f0;
     text-shadow: 0 0 5px #0f0;
+    font-size: 5vmin; /* 画面サイズに応じて文字サイズを変更 */
 }
 
+/* ↓↓↓ このセクションを大幅に変更 ↓↓↓ */
 #game-container {
     position: relative;
-    width: 600px; /* ゲーム画面の幅 */
-    height: 800px; /* ゲーム画面の高さ */
+    width: 100%; /* 横幅を画面いっぱいに */
+    max-width: 600px; /* PCでの最大幅を指定 */
+    aspect-ratio: 3 / 4; /* 縦横比を 3:4 に固定 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #game-canvas {
     background-color: #000;
     border: 2px solid #0f0;
-    cursor: none; /* ゲーム中はカーソルを消す */
+    width: 100%;
+    height: 100%;
+    cursor: none;
 }
+/* ↑↑↑ ここまで変更 ↑↑↑ */
 
 .screen {
     position: absolute;
@@ -39,17 +52,19 @@ h1 {
     justify-content: center;
     align-items: center;
     text-align: center;
+    color: white;
 }
 
 .screen h2 {
-    font-size: 3rem;
-    color: #f00;
-    text-shadow: 0 0 8px #f00;
-    margin-bottom: 40px;
+    font-size: 10vmin; /* 画面サイズに応じて変更 */
+    margin-bottom: 20px;
+}
+.screen p {
+    font-size: 5vmin;
 }
 
 button {
-    font-size: 1.5rem;
+    font-size: 4vmin;
     padding: 15px 30px;
     margin: 10px;
     background-color: #333;
@@ -63,8 +78,13 @@ button:hover {
     background-color: #0f0;
     color: #000;
 }
-/* style.css の末尾に追加 */
+
+/* クリアと失敗画面の文字色 */
 #clear-screen h2 {
-    color: #0ff; /* クリアの文字色を水色に */
+    color: #0ff;
     text-shadow: 0 0 8px #0ff;
+}
+#failure-screen h2 {
+    color: #f00;
+    text-shadow: 0 0 8px #f00;
 }
