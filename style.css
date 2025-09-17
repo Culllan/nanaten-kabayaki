@@ -40,6 +40,7 @@ h1 {
   height: 100%;
   cursor: none;
   box-sizing: border-box;
+  touch-action: none; /* スマホでのスワイプスクロールを無効 */
 }
 
 .screen {
@@ -58,8 +59,8 @@ h1 {
 .screen p { font-size: 5vmin; }
 
 button {
-  font-size: 4vmin;
-  padding: 15px 30px;
+  font-size: 5vmin; /* タップしやすく大きめ */
+  padding: 20px 40px;
   margin: 10px;
   background-color: #333;
   color: #0f0;
@@ -88,4 +89,3 @@ button:hover {
   z-index: 15;
   display: none;
 }
-
