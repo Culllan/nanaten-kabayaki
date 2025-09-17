@@ -5,11 +5,10 @@ body {
     font-family: 'Meiryo', sans-serif;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start; /* 画面上部にコンテンツを配置 */
     align-items: center;
-    height: 100vh;
+    min-height: 100vh; /* 画面いっぱいの高さを確保 */
     margin: 0;
-    /* iOSでダブルタップによるズームを防止 */
     touch-action: manipulation;
     overflow: hidden; /* スクロールバーを消す */
 }
@@ -18,25 +17,30 @@ h1 {
     color: #0f0;
     text-shadow: 0 0 5px #0f0;
     font-size: 5vmin; /* 画面サイズに応じて文字サイズを変更 */
+    margin-top: 2vmin; /* 上部に少し余白 */
+    margin-bottom: 2vmin;
 }
 
 /* ↓↓↓ このセクションを大幅に変更 ↓↓↓ */
 #game-container {
     position: relative;
-    width: 100%; /* 横幅を画面いっぱいに */
+    width: 90vmin; /* 画面の短い方の90%を使用（正方形に近い形で最大幅を制限） */
     max-width: 600px; /* PCでの最大幅を指定 */
     aspect-ratio: 3 / 4; /* 縦横比を 3:4 に固定 */
-    display: flex;
+    display: flex; /* これで子要素のcanvasを中央配置 */
     justify-content: center;
     align-items: center;
+    border: 2px solid #0f0; /* コンテナにも枠線を追加して区別しやすく */
+    box-sizing: border-box; /* パディングやボーダーをwidth/heightに含める */
 }
 
 #game-canvas {
     background-color: #000;
-    border: 2px solid #0f0;
-    width: 100%;
-    height: 100%;
+    width: 100%; /* 親コンテナの100%を使用 */
+    height: 100%; /* 親コンテナの100%を使用 */
     cursor: none;
+    /* canvas自体からはborderを削除（containerが持つため） */
+    /* border: none; */ 
 }
 /* ↑↑↑ ここまで変更 ↑↑↑ */
 
@@ -53,10 +57,12 @@ h1 {
     align-items: center;
     text-align: center;
     color: white;
+    /* ゲームキャンバスの上に表示されるように調整 */
+    z-index: 10; 
 }
 
 .screen h2 {
-    font-size: 10vmin; /* 画面サイズに応じて変更 */
+    font-size: 10vmin;
     margin-bottom: 20px;
 }
 .screen p {
@@ -79,7 +85,6 @@ button:hover {
     color: #000;
 }
 
-/* クリアと失敗画面の文字色 */
 #clear-screen h2 {
     color: #0ff;
     text-shadow: 0 0 8px #0ff;
@@ -87,4 +92,19 @@ button:hover {
 #failure-screen h2 {
     color: #f00;
     text-shadow: 0 0 8px #f00;
+}
+
+/* 「タップで操作」の表示用 */
+#tap-instruction {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 6vmin;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 15; /* UIよりも手前に */
+    display: none; /* 初期状態では非表示 */
 }

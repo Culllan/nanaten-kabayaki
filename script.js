@@ -10,6 +10,7 @@ const startButton = document.getElementById('start-button');
 const highscoreButton = document.getElementById('highscore-button');
 const restartButtons = document.querySelectorAll('.restart-button');
 const finalScoreEls = document.querySelectorAll('.final-score');
+const tapInstruction = document.getElementById('tap-instruction'); // 【新規】タップ指示要素
 
 // オーディオ要素
 const bgm = document.getElementById('bgm');
@@ -28,24 +29,16 @@ const gameDuration = 30 * 60;
 // ========
 // プレイヤー
 // ========
-const player = { x: 0, y: 0, width: 0, height: 0, bullets: [], shootInterval: 10, shootTimer: 0 };
+const player = { x: 0, y: 0, width: 0, height: 0, bullets: [], shootInterval: 15, shootTimer: 0 }; // 【難易度調整】発射間隔を長く
 
 // ========
 // 敵・ボス
 // ========
 let enemies = [];
-let enemySpawnInterval = 20;
+let enemySpawnInterval = 30; // 【難易度調整】敵の出現間隔を長く
 let enemySpawnTimer = 0;
 let boss = null;
-let bossAppearanceScore = 300;
-
-// ========
-// 【新規】スライド操作用の変数
-// ========
-let isDragging = false;
-let touchStartX = 0;
-let playerStartX = 0;
-
+let bossAppearanceScore = 150; // 【難易度調整】ボス出現スコアを低く
 
 // ==================
 // イベントリスナー設定
@@ -58,46 +51,35 @@ restartButtons.forEach(button => button.addEventListener('click', () => {
     startGame();
 }));
 
-// 【PC用】マウス操作 (絶対位置)
-canvas.addEventListener('mousemove', (e) => {
-    if (!gameRunning || isDragging) return; // スマホ操作中はマウスを無効化
+// 【変更】マウスとタッチ操作を、触れた位置に自機が移動する「絶対操作」に戻す
+function updatePlayerPosition(clientX) {
     const rect = canvas.getBoundingClientRect();
-    player.x = e.clientX - rect.left;
+    let newX = clientX - rect.left;
+    // プレイヤーが画面外に出ないように制限
+    if (newX < player.width / 2) {
+        newX = player.width / 2;
+    } else if (newX > canvas.width - player.width / 2) {
+        newX = canvas.width - player.width / 2;
+    }
+    player.x = newX;
+}
+
+canvas.addEventListener('mousemove', (e) => {
+    if (!gameRunning) return;
+    updatePlayerPosition(e.clientX);
 });
 
-// 【スマホ用】タッチ開始 (スライドの起点)
 canvas.addEventListener('touchstart', (e) => {
     if (!gameRunning) return;
     e.preventDefault();
-    isDragging = true;
-    touchStartX = e.touches[0].clientX;
-    playerStartX = player.x;
+    updatePlayerPosition(e.touches[0].clientX);
 }, { passive: false });
 
-// 【スマホ用】スライド中 (相対位置)
 canvas.addEventListener('touchmove', (e) => {
-    if (!gameRunning || !isDragging) return;
+    if (!gameRunning) return;
     e.preventDefault();
-    const touchCurrentX = e.touches[0].clientX;
-    const deltaX = touchCurrentX - touchStartX; // 指の移動量
-    player.x = playerStartX + deltaX; // プレイヤーの初期位置から移動量を加算
-
-    // 画面外にはみ出さないように制御
-    if (player.x < player.width / 2) {
-        player.x = player.width / 2;
-    }
-    if (player.x > canvas.width - player.width / 2) {
-        player.x = canvas.width - player.width / 2;
-    }
+    updatePlayerPosition(e.touches[0].clientX);
 }, { passive: false });
-
-// 【スマホ用】タッチ終了
-canvas.addEventListener('touchend', (e) => {
-    isDragging = false;
-});
-canvas.addEventListener('touchcancel', (e) => {
-    isDragging = false;
-});
 
 
 // ==================
@@ -108,9 +90,9 @@ function setGameScale() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
-    // 【サイズ調整】プレイヤーのサイズを小さくする
-    player.width = canvas.width * 0.06;
-    player.height = canvas.width * 0.06;
+    // 【サイズ調整】プレイヤーのサイズ
+    player.width = canvas.width * 0.08; // 少し大きく戻す
+    player.height = canvas.width * 0.08;
     player.x = canvas.width / 2;
     player.y = canvas.height - player.height * 1.5;
     
@@ -135,6 +117,12 @@ function startGame() {
     bgm.currentTime = 0;
     bgm.play().catch(e => console.log("BGMの再生に失敗:", e));
     gameLoop();
+
+    // 【新規】「タップで操作！」指示を表示
+    tapInstruction.style.display = 'block';
+    setTimeout(() => {
+        tapInstruction.style.display = 'none';
+    }, 2000); // 2秒後に消える
 }
 
 function endGame(isCleared) {
@@ -163,7 +151,7 @@ function playDestroySE() {
 
 
 // ==================
-// 描画関連の関数 (変更なし)
+// 描画関連の関数 (微調整)
 // ==================
 function drawPlayer() {
     ctx.fillStyle = '#0ff';
@@ -197,10 +185,11 @@ function drawBoss() {
 }
 function drawUI() {
     ctx.fillStyle = '#fff';
+    // 【調整】スコアとタイマーの表示位置
     ctx.textAlign = 'left';
-    ctx.fillText(`SCORE: ${score}`, 20, 40);
+    ctx.fillText(`SCORE: ${score}`, canvas.width * 0.03, canvas.height * 0.05); // 少し下げる
     ctx.textAlign = 'right';
-    ctx.fillText(`TIME: ${(gameTimer / 60).toFixed(2)}`, canvas.width - 20, 40);
+    ctx.fillText(`TIME: ${(gameTimer / 60).toFixed(2)}`, canvas.width * 0.97, canvas.height * 0.05); // 少し下げる
 }
 
 
@@ -214,9 +203,9 @@ function updatePlayer() {
         player.bullets.push({
             x: player.x,
             y: player.y - player.height / 2,
-            width: canvas.width * 0.012, // サイズ調整
-            height: canvas.height * 0.018, // サイズ調整
-            speed: canvas.height * 0.015
+            width: canvas.width * 0.02, // 【難易度調整】弾の幅を太く
+            height: canvas.height * 0.03, // 【難易度調整】弾の高さを高く
+            speed: canvas.height * 0.02 // 【難易度調整】弾のスピードを上げる
         });
     }
 }
@@ -225,13 +214,13 @@ function updateEnemies() {
         enemySpawnTimer++;
         if (enemySpawnTimer >= enemySpawnInterval) {
             enemySpawnTimer = 0;
-            const size = canvas.width * 0.1; // 【サイズ調整】敵を小さくする
+            const size = canvas.width * 0.1; // 敵のサイズ
             enemies.push({
                 x: Math.random() * canvas.width,
                 y: -size,
                 width: size,
                 height: size,
-                speed: canvas.height * 0.005 + Math.random() * (canvas.height * 0.003)
+                speed: canvas.height * 0.003 + Math.random() * (canvas.height * 0.002) // 【難易度調整】敵のスピードを遅く
             });
         }
     }
@@ -245,10 +234,11 @@ function updateEnemies() {
 function updateBoss() {
     if (score >= bossAppearanceScore && !boss) {
         enemies = [];
-        const size = canvas.width * 0.25; // 【サイズ調整】ボスを小さくする
+        const size = canvas.width * 0.25;
         boss = {
             x: canvas.width / 2, y: canvas.height * 0.2, width: size, height: size,
-            speed: canvas.width * 0.003, direction: 1, maxHp: 80, hp: 80,
+            speed: canvas.width * 0.002, direction: 1, // 【難易度調整】ボスの移動スピードを遅く
+            maxHp: 50, hp: 50, // 【難易度調整】ボスの体力をさらに削減
         };
     }
     if (boss) {
@@ -266,6 +256,8 @@ function checkCollisions() {
     for (let i = player.bullets.length - 1; i >= 0; i--) {
         const bullet = player.bullets[i];
         if (!bullet) continue;
+        
+        // vs 敵
         for (let j = enemies.length - 1; j >= 0; j--) {
             const enemy = enemies[j];
             if (bullet.x < enemy.x + enemy.width / 2 && bullet.x + bullet.width > enemy.x - enemy.width / 2 &&
@@ -277,6 +269,8 @@ function checkCollisions() {
                 break; 
             }
         }
+        
+        // vs ボス
         if (boss && player.bullets[i]) {
             if (bullet.x < boss.x + boss.width / 2 && bullet.x + bullet.width > boss.x - boss.width / 2 &&
                 bullet.y < boss.y + boss.height / 2 && bullet.y + bullet.height > boss.y - boss.height / 2) {
