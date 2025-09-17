@@ -5,44 +5,45 @@ body {
     font-family: 'Meiryo', sans-serif;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* 画面上部にコンテンツを配置 */
+    justify-content: flex-start;
     align-items: center;
-    min-height: 100vh; /* 画面いっぱいの高さを確保 */
+    height: 100vh;
     margin: 0;
+    padding: 2vmin 0; /* 上下に少し余白を追加 */
+    box-sizing: border-box;
     touch-action: manipulation;
-    overflow: hidden; /* スクロールバーを消す */
+    overflow: hidden;
 }
 
 h1 {
     color: #0f0;
     text-shadow: 0 0 5px #0f0;
-    font-size: 5vmin; /* 画面サイズに応じて文字サイズを変更 */
-    margin-top: 2vmin; /* 上部に少し余白 */
-    margin-bottom: 2vmin;
+    font-size: 5vmin;
+    margin: 0 0 2vmin 0; /* h1の下に余白 */
+    flex-shrink: 0; /* h1が縮まないように */
 }
 
-/* ↓↓↓ このセクションを大幅に変更 ↓↓↓ */
+/* ↓↓↓ レイアウト崩れを修正 ↓↓↓ */
 #game-container {
     position: relative;
-    width: 90vmin; /* 画面の短い方の90%を使用（正方形に近い形で最大幅を制限） */
-    max-width: 600px; /* PCでの最大幅を指定 */
-    aspect-ratio: 3 / 4; /* 縦横比を 3:4 に固定 */
-    display: flex; /* これで子要素のcanvasを中央配置 */
+    width: 95%; /* 横幅を画面の95%に */
+    max-width: 500px; /* PCでの最大幅を少し小さく */
+    aspect-ratio: 3 / 4;
+    display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid #0f0; /* コンテナにも枠線を追加して区別しやすく */
-    box-sizing: border-box; /* パディングやボーダーをwidth/heightに含める */
+    box-sizing: border-box;
 }
 
 #game-canvas {
     background-color: #000;
-    width: 100%; /* 親コンテナの100%を使用 */
-    height: 100%; /* 親コンテナの100%を使用 */
+    border: 2px solid #0f0;
+    width: 100%;
+    height: 100%;
     cursor: none;
-    /* canvas自体からはborderを削除（containerが持つため） */
-    /* border: none; */ 
+    box-sizing: border-box;
 }
-/* ↑↑↑ ここまで変更 ↑↑↑ */
+/* ↑↑↑ ここまで修正 ↑↑↑ */
 
 .screen {
     position: absolute;
@@ -57,8 +58,7 @@ h1 {
     align-items: center;
     text-align: center;
     color: white;
-    /* ゲームキャンバスの上に表示されるように調整 */
-    z-index: 10; 
+    z-index: 10;
 }
 
 .screen h2 {
@@ -94,7 +94,6 @@ button:hover {
     text-shadow: 0 0 8px #f00;
 }
 
-/* 「タップで操作」の表示用 */
 #tap-instruction {
     position: absolute;
     top: 50%;
@@ -105,6 +104,6 @@ button:hover {
     background-color: rgba(0, 0, 0, 0.7);
     padding: 20px;
     border-radius: 10px;
-    z-index: 15; /* UIよりも手前に */
-    display: none; /* 初期状態では非表示 */
+    z-index: 15;
+    display: none;
 }
