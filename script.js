@@ -124,10 +124,15 @@ function startGame() {
   isFirstFrame = false;
   gameRunning = true;
 
-  // BGMの再生だけに集中させる
+  // ▼▼▼ ここから修正 ▼▼▼
+  // 【最終手段】BGM再生直前に、他のSEファイルのデータを読み込ませる
+  if (destroySe) destroySe.load();
+  if (endSe) endSe.load();
+  // ▲▲▲ 修正ここまで ▲▲▲
+
+  // BGMの再生は通常通り行う
   bgm.currentTime = 0;
   bgm.play().catch(e => {
-    // もしエラーが出たらコンソールに表示
     console.log("BGMの再生に失敗しました:", e);
   });
 
